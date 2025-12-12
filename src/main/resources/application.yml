@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 修改为你的数据库地址、用户名、密码
+    url: jdbc:mysql://localhost:3306/post_demo?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+  jpa:
+    show-sql: true # 开启 SQL 打印，方便观察锁的行为
+    hibernate:
+      ddl-auto: update # 自动更新表结构（已有表时不会删除数据）
+    open-in-view: false
+  redis:
+    host: localhost
+    port: 6379
+    password: 123456
+    lettuce:
+      pool:
+        max-active: 100 # 连接池最大连接数，配合你的 100 线程压测
+        max-wait: -1ms
