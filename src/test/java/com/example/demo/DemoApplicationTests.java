@@ -27,6 +27,9 @@ class PostServiceTest {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+
+
     // 压测配置：200 线程，10万请求，分散到 1000 个热点数据上
     private static final int THREAD_COUNT = 200;
     private static final int TOTAL_REQUESTS = 100000;
@@ -230,4 +233,36 @@ class PostServiceTest {
         System.out.println("数据丢失数  : " + (TOTAL_REQUESTS - totalViewsInRedis));
         System.out.println("================================");
     }
+
+    @Test
+    void testNoIndexUpdate() throws InterruptedException {
+        // ... 初始化数据 (同前) ...
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
+
+        // 2. 【补上这行】准备倒计时门栓 (计数器)
+        CountDownLatch latch = new CountDownLatch(TOTAL_REQUESTS);
+        // 发起并发
+        for (int i = 0; i < TOTAL_REQUESTS; i++) {// 1. 【补上这行】准备线程池 (包工头)
+
+
+            executorService.execute(() -> {
+                try {
+                    // 随机生成一个 P-X 编号
+                    int randomId = ThreadLocalRandom.current().nextInt(1, POST_COUNT + 1);
+                    String postCode = "P-" + randomId;
+
+                    // 灾难性调用
+                    postService.addViewCountByPostCode(postCode);
+
+                } catch (Exception e) {
+                    // 你会看到大量的 LockAcquisitionException 或 Timeout
+                    e.printStackTrace();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+        // ...
+    }
+
 }

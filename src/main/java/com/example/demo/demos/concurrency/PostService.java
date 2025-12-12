@@ -77,4 +77,10 @@ public class PostService {
         String val = redisTemplate.opsForValue().get("post:view:" + id);
         return val == null ? 0 : Integer.parseInt(val);
     }
+
+    // 方案四：根据无索引字段更新 (性能对照组)
+    @Transactional
+    public void addViewCountByPostCode(String postCode) {
+        postRepository.updateViewCountByPostCode(postCode);
+    }
 }

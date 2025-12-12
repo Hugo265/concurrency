@@ -23,4 +23,6 @@ public class Post {
      */
     @Version
     private Integer version;
+    @Column(name = "post_code")
+    private String postCode;
 }
