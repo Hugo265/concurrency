@@ -1,6 +1,7 @@
 package com.example.demo.demos.concurrency;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,8 @@ public class PostService {
 
     @Autowired
     private PostRepository postRepository;
+    @Autowired
+    private StringRedisTemplate redisTemplate; // 👈 注入 Redis 模板
 
     /**
      * 方案一：悲观锁实现 (推荐用于高并发写)
@@ -52,5 +55,26 @@ public class PostService {
         }
         // 如果5次都失败，就放弃，或者记录日志
         // System.err.println("重试失败，丢失一次更新");
+
+        /**
+         * 方案三：Redis 原子递增 (性能天花板)
+         * 特点：内存操作，单线程原子性，极快。
+         */
+    }
+    public void addViewCountRedis(Long id) {
+        // key 的格式通常是 "业务前缀:ID"
+        String key = "post:view:" + id;
+
+        // INCR 命令：原子加 1。
+        // 不需要任何锁，Redis 天然单线程保证原子性。
+        redisTemplate.opsForValue().increment(key);
+    }
+
+    /**
+     * 辅助方法：从 Redis 获取当前浏览量（用于验证结果）
+     */
+    public int getViewCountFromRedis(Long id) {
+        String val = redisTemplate.opsForValue().get("post:view:" + id);
+        return val == null ? 0 : Integer.parseInt(val);
     }
 }

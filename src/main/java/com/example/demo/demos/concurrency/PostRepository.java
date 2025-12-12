@@ -18,5 +18,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("select p from Post p where p.id = :id")
     Optional<Post> findByIdWithPessimisticLock(@Param("id") Long id);
 
+    /**
+     * 新增：统计所有帖子的浏览量总和
+     * 用于验证压测结果
+     */
+    @Query("select sum(p.viewCount) from Post p")
+    Long sumTotalViewCount();
 }
 
